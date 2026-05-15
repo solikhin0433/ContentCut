@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Cutter</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🎬 Video Cutter</h1>
+        <p>Potong video dari YouTube, TikTok, Instagram & lainnya</p>
+    </header>
+
+    <main>
+        <div class="card" id="step-url">
+            <h2>① Masukkan URL Video</h2>
+            <div class="input-row">
+                <input type="text" id="videoUrl" placeholder="https://youtube.com/watch?v=..." />
+                <button id="btnInfo" onclick="getVideoInfo()">Cek Video</button>
+            </div>
+        </div>
+
+        <div class="card hidden" id="infoCard">
+            <div class="preview">
+                <img id="thumb" src="" alt="thumbnail" />
+                <div>
+                    <h3 id="vTitle">-</h3>
+                    <p>👤 <span id="vUploader">-</span></p>
+                    <p>⏱️ Durasi: <span id="vDuration">-</span></p>
+                    <p>📱 Platform: <span id="vPlatform">-</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card hidden" id="step-cut">
+            <h2>② Atur Waktu Pemotongan</h2>
+            <div class="time-row">
+                <div>
+                    <label>Mulai</label>
+                    <input type="text" id="startTime" value="00:00:00" placeholder="00:00:00"/>
+                </div>
+                <div class="arrow">→</div>
+                <div>
+                    <label>Selesai</label>
+                    <input type="text" id="endTime" value="00:00:30" placeholder="00:00:30"/>
+                </div>
+            </div>
+            <div class="quality-row">
+                <label>Kualitas:</label>
+                <select id="quality">
+                    <option value="360p">360p — Ringan (TikTok/Reels)</option>
+                    <option value="720p" selected>720p HD — Rekomendasi</option>
+                    <option value="1080p">1080p Full HD — Terbaik</option>
+                </select>
+            </div>
+            <button class="btn-cut" onclick="cutVideo()">✂️ Potong & Download</button>
+        </div>
+
+        <div class="card hidden" id="progressCard">
+            <h2>⚙️ Memproses Video...</h2>
+            <div class="bar-wrap"><div class="bar-fill" id="barFill"></div></div>
+            <p id="progressMsg">Menghubungkan ke platform...</p>
+        </div>
+
+        <div class="card err hidden" id="errCard">
+            <h2>❌ Error</h2>
+            <p id="errMsg"></p>
+            <button onclick="resetApp()">↩ Coba Lagi</button>
+        </div>
+    </main>
+
+    <footer>⚡ yt-dlp + FFmpeg + FastAPI | Gratis & Tanpa Token</footer>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
