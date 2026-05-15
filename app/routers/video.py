@@ -17,6 +17,8 @@ class CutVideoRequest(BaseModel):
     start_time: str
     end_time: str
     quality: str = "720p"
+    aspect_ratio: str = "original"
+    crop_position: str = "center"
 
 
 @router.post("/info")
@@ -38,7 +40,9 @@ async def cut_video_endpoint(request: CutVideoRequest, background_tasks: Backgro
             input_path=temp_file,
             start_time=request.start_time,
             end_time=request.end_time,
-            output_filename=output_filename
+            output_filename=output_filename,
+            aspect_ratio=request.aspect_ratio,
+            crop_position=request.crop_position
         )
         if temp_file:
             background_tasks.add_task(cleanup_file, temp_file)
