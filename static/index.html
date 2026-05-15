@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Video Cutter</title>
     <link rel="stylesheet" href="/static/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" />
   </head>
   <body>
     <div class="container">
@@ -27,9 +28,14 @@
         </div>
 
         <div class="card hidden" id="infoCard">
-          <div class="preview">
-            <img id="thumb" src="" alt="thumbnail" />
-            <div>
+          <div class="preview-container">
+            <div class="video-preview">
+                <video id="videoPlayer" controls crossorigin="anonymous">
+                    Your browser does not support the video tag.
+                </video>
+                <img id="thumb" src="" alt="thumbnail" class="hidden" />
+            </div>
+            <div class="video-details">
               <h3 id="vTitle">-</h3>
               <p>👤 <span id="vUploader">-</span></p>
               <p>⏱️ Durasi: <span id="vDuration">-</span></p>
@@ -40,6 +46,16 @@
 
         <div class="card hidden" id="step-cut">
           <h2>② Atur Waktu Pemotongan</h2>
+          
+          <!-- Visual Timeline Slider -->
+          <div class="timeline-container">
+            <div id="timeline-slider"></div>
+            <div class="timeline-labels">
+                <span id="slider-start-label">00:00:00</span>
+                <span id="slider-end-label">00:00:00</span>
+            </div>
+          </div>
+
           <div class="time-row">
             <div>
               <label>Mulai</label>
@@ -82,12 +98,13 @@
           <div class="quality-row">
                 <label>Posisi Potong (CROP):</label>
                 <select id="cropPosition">
-                    <option value="center" selected>Tengah</option>
+                    <option value="auto" selected>Auto (AI Smart Crop) ✨</option>
+                    <option value="center">Tengah</option>
                     <option value="left">Kiri</option>
                     <option value="right">Kanan</option>
                 </select>
             </div>
-<button class="btn-cut" onclick="cutVideo()">
+<button class="btn-cut" id="btnCut" onclick="cutVideo()">
             ✂️ Potong & Download
           </button>
         </div>
@@ -107,6 +124,18 @@
 
       <footer>⚡ yt-dlp + FFmpeg + FastAPI | Gratis & Tanpa Token</footer>
     </div>
+
+    <!-- Success Modal -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="success-modal">
+            <div class="modal-icon">✅</div>
+            <h2>Berhasil!</h2>
+            <p>Video Anda telah berhasil dipotong dan sedang diunduh ke komputer Anda.</p>
+            <button class="btn-primary" onclick="closeModal()">Tutup</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
     <script src="/static/app.js"></script>
   </body>
 </html>

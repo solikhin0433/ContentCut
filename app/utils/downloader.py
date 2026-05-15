@@ -1,6 +1,7 @@
 import yt_dlp
 import uuid
 from pathlib import Path
+from app.utils.ffmpeg_utils import get_ffmpeg_path
 
 DOWNLOAD_DIR = Path("downloads")
 DOWNLOAD_DIR.mkdir(exist_ok=True)
@@ -10,15 +11,29 @@ def get_video_info(url: str) -> dict:
         'quiet': True,
         'no_warnings': True,
         'nocheckcertificate': True,
+        'ffmpeg_location': get_ffmpeg_path(),
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
+        
+        # Cari URL yang paling cocok untuk preview browser (biasanya mp4 atau best)
+        # Kita cari format yang sudah ada video+audio (direct play)
+        formats = info.get('formats', [])
+        preview_url = info.get('url') # Fallback
+        
+        # Cari format mp4 yang punya audio dan video
+        for f in formats:
+            if f.get('vcodec') != 'none' and f.get('acodec') != 'none' and f.get('ext') == 'mp4':
+                preview_url = f.get('url')
+                break
+
         return {
             "title": info.get("title", "Unknown"),
             "duration": info.get("duration", 0),
             "thumbnail": info.get("thumbnail", ""),
             "uploader": info.get("uploader", "Unknown"),
             "platform": info.get("extractor_key", "Unknown"),
+            "preview_url": preview_url
         }
 
 def download_video(url: str, quality: str = "720p") -> str:
@@ -40,6 +55,7 @@ def download_video(url: str, quality: str = "720p") -> str:
         'no_warnings': True,
         'nocheckcertificate': True,
         'extractor_args': {'youtube': {'skip': ['dash', 'hls']}},
+        'ffmpeg_location': get_ffmpeg_path(),
         'postprocessors': [{
             'key': 'FFmpegVideoConvertor',
             'preferedformat': 'mp4',
