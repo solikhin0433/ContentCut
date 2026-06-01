@@ -3,15 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Video Cutter</title>
+    <title>ContentCut — Video Cutter & Studio Editor</title>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" />
   </head>
   <body>
-    <div class="container">
+    <!-- Cutter App Workspace -->
+    <div class="container" id="cutter-app">
       <header>
-        <h1>🎬 Video Cutter</h1>
-        <p>Potong video dari YouTube, TikTok, Instagram & lainnya</p>
+        <div class="header-top">
+          <h1>🎬 ContentCut</h1>
+          <button id="btnOpenStudioDirect" class="btn-studio-direct" onclick="enterStudioDirect()">🎨 Buka Studio Editor</button>
+        </div>
+        <p>Potong video dari YouTube, TikTok, Instagram & lainnya, lalu lanjutkan edit ala CapCut</p>
       </header>
 
       <main>
@@ -104,8 +112,8 @@
                     <option value="right">Kanan</option>
                 </select>
             </div>
-<button class="btn-cut" id="btnCut" onclick="cutVideo()">
-            ✂️ Potong & Download
+          <button class="btn-cut" id="btnCut" onclick="cutVideo()">
+            ✂️ Potong Video
           </button>
         </div>
 
@@ -122,7 +130,278 @@
         </div>
       </main>
 
-      <footer>⚡ yt-dlp + FFmpeg + FastAPI | Gratis & Tanpa Token</footer>
+      <footer>⚡ yt-dlp + FFmpeg + FastAPI | Gratis & On-Device</footer>
+    </div>
+
+    <!-- Studio Editor Workspace (Hidden by Default) -->
+    <div id="studio-app" class="studio-workspace hidden">
+      <header class="studio-header">
+        <div class="left-controls">
+          <button class="btn-back" onclick="exitStudio()">↩ Kembali ke Cutter</button>
+          <span class="project-title" id="studioProjectTitle">Proyek Video Studio</span>
+        </div>
+        <div class="right-controls">
+          <button class="btn-export" onclick="openExportModal()">⚡ Ekspor Video</button>
+        </div>
+      </header>
+
+      <div class="studio-main">
+        <!-- Left Panel: Assets and Library -->
+        <aside class="studio-left-panel">
+          <div class="library-tabs">
+            <button class="tab-btn active" id="btn-tab-media" onclick="switchLibraryTab('tab-media')">🎞️ Media</button>
+            <button class="tab-btn" id="btn-tab-text" onclick="switchLibraryTab('tab-text')">🔤 Teks</button>
+            <button class="tab-btn" id="btn-tab-audio" onclick="switchLibraryTab('tab-audio')">🎵 Audio</button>
+            <button class="tab-btn" id="btn-tab-filters" onclick="switchLibraryTab('tab-filters')">✨ Filter</button>
+            <button class="tab-btn" id="btn-tab-canvas" onclick="switchLibraryTab('tab-canvas')">🖼️ Kanvas</button>
+          </div>
+          
+          <div class="library-content">
+            <!-- Media Tab -->
+            <div id="tab-media" class="tab-content active">
+              <h3>Overlay / PIP (Picture-in-Picture)</h3>
+              <p class="tab-desc">Tambahkan video atau gambar sebagai overlay di atas video utama.</p>
+              <label class="file-upload-btn">
+                <span>➕ Unggah Overlay</span>
+                <input type="file" id="pipInput" accept="video/*,image/*" onchange="addPipOverlay(event)" />
+              </label>
+              <div class="overlay-list" id="pipList">
+                <span class="no-assets">Belum ada overlay</span>
+              </div>
+            </div>
+
+            <!-- Text Tab -->
+            <div id="tab-text" class="tab-content">
+              <h3>Teks Overlay</h3>
+              <p class="tab-desc">Tambahkan teks di atas video Anda. Anda bisa menggesernya langsung di layar.</p>
+              <button class="btn-action" onclick="addNewText()">➕ Tambah Teks Baru</button>
+              <button class="btn-action secondary" onclick="startAutoCaptions()" id="btnAutoCaptions" style="margin-top:8px;">🎙️ Auto-Captions (Lokal) ✨</button>
+              <div class="text-presets">
+                <h4>Preset Teks Cepat</h4>
+                <div class="presets-grid">
+                  <button onclick="addPresetText('Normal', '#ffffff', 40)">Putih Standar</button>
+                  <button onclick="addPresetText('Neon Pink', '#fff', 45, '#ff007f', 4)">Neon Pink</button>
+                  <button onclick="addPresetText('Subtitle Kuning', '#ffff00', 35, '#000000', 3)">Subtitle Kuning</button>
+                  <button onclick="addPresetText('Judul Besar', '#00f2fe', 60, '#09090e', 5)">Judul Cyber</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Audio Tab -->
+            <div id="tab-audio" class="tab-content">
+              <h3>Musik Latar & Efek</h3>
+              <p class="tab-desc">Tambahkan musik latar (.mp3, .wav) ke timeline.</p>
+              <label class="file-upload-btn">
+                <span>➕ Unggah Musik</span>
+                <input type="file" id="audioInput" accept="audio/*" onchange="addAudioTrack(event)" />
+              </label>
+              <button class="btn-action secondary" style="margin-top: 10px;" onclick="extractAudioFromVideo()">🔊 Ekstrak Audio dari Video Utama</button>
+              <div class="audio-list" id="audioList">
+                <span class="no-assets">Belum ada musik</span>
+              </div>
+            </div>
+
+            <!-- Filters Tab -->
+            <div id="tab-filters" class="tab-content">
+              <h3>Filter Visual</h3>
+              <p class="tab-desc">Sesuaikan warna dan efek video secara real-time.</p>
+              <div class="filter-controls">
+                <div class="filter-group">
+                  <label>Kecerahan (Brightness): <span id="val-brightness">100</span>%</label>
+                  <input type="range" id="filter-brightness" min="0" max="200" value="100" oninput="updateFilter('brightness', this.value)" />
+                </div>
+                <div class="filter-group">
+                  <label>Kontras (Contrast): <span id="val-contrast">100</span>%</label>
+                  <input type="range" id="filter-contrast" min="0" max="200" value="100" oninput="updateFilter('contrast', this.value)" />
+                </div>
+                <div class="filter-group">
+                  <label>Saturasi (Saturate): <span id="val-saturate">100</span>%</label>
+                  <input type="range" id="filter-saturate" min="0" max="200" value="100" oninput="updateFilter('saturate', this.value)" />
+                </div>
+                <div class="filter-group">
+                  <label>Grayscale: <span id="val-grayscale">0</span>%</label>
+                  <input type="range" id="filter-grayscale" min="0" max="100" value="0" oninput="updateFilter('grayscale', this.value)" />
+                </div>
+                <div class="filter-group">
+                  <label>Sepia: <span id="val-sepia">0</span>%</label>
+                  <input type="range" id="filter-sepia" min="0" max="100" value="0" oninput="updateFilter('sepia', this.value)" />
+                </div>
+                <div class="filter-group">
+                  <label>Hue Rotate: <span id="val-huerotate">0</span> deg</label>
+                  <input type="range" id="filter-huerotate" min="0" max="360" value="0" oninput="updateFilter('huerotate', this.value)" />
+                </div>
+                <div class="filter-group">
+                  <label>Blur (Piksel): <span id="val-blur">0</span>px</label>
+                  <input type="range" id="filter-blur" min="0" max="20" value="0" oninput="updateFilter('blur', this.value)" />
+                </div>
+                <div class="filter-group checkbox-group">
+                  <input type="checkbox" id="filter-glitch" onchange="toggleGlitch(this.checked)" />
+                  <label for="filter-glitch">⚡ Aktifkan Efek Glitch (Neon)</label>
+                </div>
+                <div class="filter-group checkbox-group" style="margin-top: 8px;">
+                  <input type="checkbox" id="filter-pose" onchange="togglePoseDetection(this.checked)" />
+                  <label for="filter-pose">🕺 Neon Body Glow (MediaPipe Pose) ✨</label>
+                </div>
+                <div id="pose-loading-status" class="hidden" style="font-size:0.75rem; color:var(--secondary); margin-left: 24px; margin-top: -4px;">
+                  Memuat model MediaPipe (~5MB)...
+                </div>
+              </div>
+            </div>
+
+            <!-- Canvas Tab -->
+            <div id="tab-canvas" class="tab-content">
+              <h3>Format & Latar Belakang</h3>
+              <div class="filter-group">
+                <label>Aspek Rasio Kanvas</label>
+                <select id="canvasRatio" onchange="changeCanvasRatio(this.value)">
+                  <option value="16:9" selected>16:9 (Landscape - YouTube)</option>
+                  <option value="9:16">9:16 (Portrait - TikTok/Reels)</option>
+                  <option value="1:1">1:1 (Square - Instagram)</option>
+                  <option value="4:3">4:3 (Retro/Standard)</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label>Tipe Latar Belakang</label>
+                <select id="canvasBgType" onchange="changeCanvasBgType(this.value)">
+                  <option value="color" selected>Warna Solid</option>
+                  <option value="blur">Efek Blur (Gaussian)</option>
+                  <option value="image">Gambar Khusus</option>
+                </select>
+              </div>
+              <div class="filter-group" id="canvasBgColorGroup">
+                <label>Warna Latar</label>
+                <input type="color" id="canvasBgColor" value="#000000" onchange="changeCanvasBgColor(this.value)" />
+              </div>
+              <div class="filter-group hidden" id="canvasBgImageGroup">
+                <label>Unggah Gambar Latar</label>
+                <label class="file-upload-btn">
+                  <span>➕ Pilih Gambar</span>
+                  <input type="file" id="canvasBgImageInput" accept="image/*" onchange="changeCanvasBgImage(event)" />
+                </label>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Center Panel: Live Preview Canvas -->
+        <main class="studio-center-panel">
+          <div class="canvas-viewport">
+            <div class="canvas-wrapper" id="canvasWrapper">
+              <canvas id="studioCanvas" width="1280" height="720"></canvas>
+              <!-- Info overlay if no video is loaded -->
+              <div class="canvas-placeholder" id="canvasPlaceholder">
+                <div class="placeholder-content">
+                  <div class="icon">🎞️</div>
+                  <h3>Studio Kosong</h3>
+                  <p>Unggah file video utama Anda untuk mulai mengedit.</p>
+                  <label class="btn-action file-upload-btn">
+                    <span>➕ Pilih Video Utama</span>
+                    <input type="file" id="mainVideoInput" accept="video/*" onchange="loadMainVideo(event)" />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video Playback & Scrubbing Controls -->
+          <div class="player-controls">
+            <button class="btn-ctrl" id="btnPlayPause" onclick="togglePlayPause()" disabled>▶ Play</button>
+            <button class="btn-ctrl" onclick="stopVideo()" id="btnStop" disabled>⏹ Stop</button>
+            <div class="time-display">
+              <span id="currentTimeDisplay">00:00:00</span> / <span id="durationDisplay">00:00:00</span>
+            </div>
+            
+            <!-- Quick Aspect Ratio Selector -->
+            <div class="ratio-control" style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Format Layar:</span>
+              <select id="canvasRatioDirect" onchange="changeCanvasRatio(this.value)" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; outline: none; cursor: pointer; font-family: inherit;">
+                <option value="16:9" selected>16:9 Landscape</option>
+                <option value="9:16">9:16 Portrait</option>
+                <option value="1:1">1:1 Square</option>
+                <option value="4:3">4:3 Retro</option>
+              </select>
+            </div>
+
+            <div class="vol-control">
+              <button onclick="toggleMuteVideo()" id="btnMute">🔊</button>
+              <input type="range" id="mainVolumeSlider" min="0" max="100" value="100" oninput="setVideoVolume(this.value)" />
+            </div>
+          </div>
+        </main>
+
+        <!-- Right Panel: Contextual Inspector Settings -->
+        <aside class="studio-right-panel">
+          <div class="inspector-header">
+            <h3>🛠️ Properti Klip</h3>
+          </div>
+          
+          <div class="inspector-content" id="inspectorContent">
+            <div class="no-selection">
+              <p>Pilih klip di timeline untuk mengubah pengaturannya.</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Bottom Panel: Multi-track Timeline -->
+      <footer class="studio-timeline-panel">
+        <div class="timeline-toolbar">
+          <div class="left-tools">
+            <button onclick="splitSelectedClip()" title="Bagi klip terpilih (Split)" id="btnSplit" disabled>✂️ Split</button>
+            <button onclick="deleteSelectedClip()" title="Hapus klip terpilih (Delete)" id="btnDelete" disabled>🗑️ Hapus</button>
+          </div>
+          <div class="right-tools">
+            <button onclick="zoomTimeline(0.8)">🔍-</button>
+            <button onclick="zoomTimeline(1.2)">🔍+</button>
+            <span class="zoom-label" id="zoomLabel">Skala: 10px/s</span>
+          </div>
+        </div>
+
+        <div class="timeline-tracks-container" id="timelineScrollArea" onscroll="handleTimelineScroll()">
+          <!-- Playhead indicator -->
+          <div id="timelinePlayhead" class="timeline-playhead"></div>
+          
+          <!-- Timeline Time Ruler -->
+          <div class="timeline-ruler" id="timelineRuler">
+            <!-- Ticks will be dynamically drawn in JS -->
+          </div>
+
+          <!-- Tracks List -->
+          <div class="timeline-tracks" id="timelineTracks">
+            <!-- Video Track -->
+            <div class="track-row" data-track-type="video">
+              <div class="track-label">🎞️ Video Utama</div>
+              <div class="track-clips-area" id="track-video">
+                <!-- Main video clip is drawn here -->
+              </div>
+            </div>
+
+            <!-- Overlay/PIP Track -->
+            <div class="track-row" data-track-type="pip">
+              <div class="track-label">🔲 Overlay (PIP)</div>
+              <div class="track-clips-area" id="track-pip">
+                <!-- Overlay clip is drawn here -->
+              </div>
+            </div>
+
+            <!-- Text Track -->
+            <div class="track-row" data-track-type="text">
+              <div class="track-label">🔤 Teks Overlay</div>
+              <div class="track-clips-area" id="track-text">
+                <!-- Text clips are drawn here -->
+              </div>
+            </div>
+
+            <!-- Audio Track -->
+            <div class="track-row" data-track-type="audio">
+              <div class="track-label">🎵 Musik/Audio</div>
+              <div class="track-clips-area" id="track-audio">
+                <!-- Audio clips are drawn here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
 
     <!-- Success Modal -->
@@ -130,8 +409,25 @@
         <div class="success-modal">
             <div class="modal-icon">✅</div>
             <h2>Berhasil!</h2>
-            <p>Video Anda telah berhasil dipotong dan sedang diunduh ke komputer Anda.</p>
-            <button class="btn-primary" onclick="closeModal()">Tutup</button>
+            <p>Video Anda telah berhasil dipotong dan siap digunakan.</p>
+            <div class="modal-actions-layout">
+                <button class="btn-primary" onclick="openCutVideoInStudio()">🎨 Lanjutkan Edit di Studio</button>
+                <button class="btn-secondary" onclick="downloadCutVideoDirect()">💾 Simpan ke Disk</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exporting Progress Modal -->
+    <div id="export-overlay" class="modal-overlay hidden">
+        <div class="success-modal">
+            <h2>⚙️ Merender Video...</h2>
+            <p>Silakan tunggu, sistem sedang merekam audio & canvas hasil editan langsung di browser Anda.</p>
+            <div class="bar-wrap"><div class="bar-fill" id="exportBarFill"></div></div>
+            <p id="exportProgressMsg">Memulai perekaman...</p>
+            <div class="modal-actions-layout">
+              <button class="btn-primary hidden" id="btnDownloadExport" onclick="downloadExportedFile()">💾 Unduh Hasil Render</button>
+              <button class="btn-secondary" id="btnCancelExport" onclick="cancelExport()">Batal</button>
+            </div>
         </div>
     </div>
 
